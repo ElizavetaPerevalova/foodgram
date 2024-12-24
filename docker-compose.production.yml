@@ -5,10 +5,11 @@ volumes:
 
 services:
   db:
-    image: postgres:13
+    image: postgres:17
     env_file: .env
     volumes:
       - pg_data:/var/lib/postgresql/data
+    platform: linux/amd64
 
   backend:
     image: lisaperevalova/foodgram_backend
@@ -16,8 +17,12 @@ services:
     volumes:
       - static:/backend_static
       - media:/app/media
+      - .:/backend
     depends_on:
       - db
+    platform: linux/amd64
+    environment:
+      - DEBUG=True
 
   frontend:
     env_file: .env
@@ -27,6 +32,7 @@ services:
       - static:/frontend_static
     depends_on:
       - db
+    platform: linux/amd64
 
   gateway:
     image: lisaperevalova/foodgram_gateway
@@ -40,3 +46,4 @@ services:
     depends_on:
       - backend
       - frontend
+    platform: linux/amd64

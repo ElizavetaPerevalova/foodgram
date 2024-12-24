@@ -3,7 +3,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from users.models import User
-from backend.constants import (INGREDIENT_MIN_AMOUNT,
+from foodgram.constants import (INGREDIENT_MIN_AMOUNT,
                                INGREDIENT_MIN_AMOUNT_ERROR, LEN_RECIPE_NAME,
                                LENG_MAX, MAX_AMOUNT, MAX_COOKING_TIME,
                                MAX_LENG, MAX_NUMBER_OF_CHARACTERS, MIN_AMOUNT,

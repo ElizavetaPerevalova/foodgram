@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 from .validators import validate_username
-from backend.constants import (LENG_DATA_USER, LENG_EMAIL,
+from foodgram.constants import (LENG_DATA_USER, LENG_EMAIL,
                                LIMITED_NUMBER_OF_CHARACTERS)
 
 

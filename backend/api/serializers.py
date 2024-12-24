@@ -10,7 +10,7 @@ from rest_framework.validators import UniqueTogetherValidator
 from users.models import Follow, User
 from .models import (Favourites, Ingredient, IngredientInRecipe, Recipe,
                      RecipeIngredient, ShoppingCart, Tag)
-from backend.constants import (ALREADY_BUY, COOKING_TIME_MIN_ERROR,
+from foodgram.constants import (ALREADY_BUY, COOKING_TIME_MIN_ERROR,
                                DUBLICAT_USER, INGREDIENT_DUBLICATE_ERROR,
                                INGREDIENT_MIN_AMOUNT_ERROR, RECIPE_IN_FAVORITE,
                                SELF_FOLLOW, TAG_ERROR, TAG_UNIQUE_ERROR)
