@@ -27,4 +27,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 8500
 
 # Запускаем приложение с использованием Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:8500", "foodgram.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8500", "backend.wsgi"]
