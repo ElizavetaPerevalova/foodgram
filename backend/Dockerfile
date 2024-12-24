@@ -2,29 +2,21 @@
 
 # WORKDIR /app
 
-# ENV PYTHONPATH=/app
+# COPY . /app/
 
-# COPY requirements.txt /app/
+# RUN pip install --no-cache-dir -r requirements.txt
 
-# RUN pip install -r /app/requirements.txt --no-cache-dir
+# EXPOSE 8500
 
-# COPY ./backend /app/
-
-# CMD ["gunicorn", "--bind", "0.0.0.0:8500", "backend.wsgi:application"]
-# Используем официальный образ Python
+# CMD ["gunicorn", "--bind", "0.0.0.0:8500", "backend.wsgi"]
 FROM python:3.9
 
-# Устанавливаем рабочую директорию в /app
 WORKDIR /app
 
-# Копируем все файлы из текущей директории в контейнер
-COPY . /app/
+COPY requirements.txt .
 
-# Устанавливаем зависимости
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -r /app/requirements.txt --no-cache-dir
 
-# Открываем порт, на котором будет работать приложение
-EXPOSE 8500
+COPY . .
 
-# Запускаем приложение с использованием Gunicorn
 CMD ["gunicorn", "--bind", "0.0.0.0:8500", "backend.wsgi"]
