@@ -15,7 +15,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         success_count = 0
         with open(
-                '/data/ingredients.csv',
+                './data/ingredients.csv',
                 'r',
                 encoding='utf-8',
         ) as csv_file:
