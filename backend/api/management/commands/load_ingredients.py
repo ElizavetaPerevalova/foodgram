@@ -1,35 +1,32 @@
 import csv
-import logging
+import datetime
 
 from django.core.management.base import BaseCommand
-
 from api.models import Ingredient
+
+csv_file = "ingredients.csv"
+fields = ("name", "measurement_unit")
 
 
 class Command(BaseCommand):
-    help = 'Импорт данных из csv-файла в базу данных (модель Ингредиенты)'
-
-    def add_arguments(self, parser):
-        parser.add_argument('--path', type=str, help='Path to file')
+    help = "Load ingredients from csv file"
 
     def handle(self, *args, **options):
-        success_count = 0
-        with open(
-                './data/ingredients.csv',
-                'r',
-                encoding='utf-8',
-        ) as csv_file:
-            reader = csv.reader(csv_file)
-
-            for row in reader:
-                name_csv = 0
-                unit_csv = 1
-                try:
-                    obj, created = Ingredient.objects.get_or_create(
-                        name=row[name_csv],
-                        measurement_unit=row[unit_csv],
-                    )
-                    if created:
-                        success_count += 1
-                except Exception as error:
-                    logging.exception(f'Ошибка в строке {row}: {error}')
+        print("старт импорта ингредиентов")
+        start_time = datetime.datetime.now()
+        try:
+            with open(
+                "recipes/management/data/ingredients.csv",
+                "r",
+                encoding="utf-8",
+            ) as file:
+                if not file:
+                    raise FileNotFoundError
+                reader = csv.DictReader(file, delimiter=",")
+                for row in reader:
+                    print(row)
+                    Ingredient.objects.get_or_create(**row)
+        except Exception as error:
+            print(f"импорт завершен с ошибкой: {error}")
+        print(f"импорт завершен за {datetime.datetime.now() - start_time}")
+        self.stdout.write(self.style.SUCCESS("Импорт завершен"))
