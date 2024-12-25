@@ -3,7 +3,6 @@ import logging
 
 from django.core.management.base import BaseCommand
 
-from backend import settings
 from api.models import Ingredient
 
 
@@ -16,7 +15,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         success_count = 0
         with open(
-                f'{settings.BASE_DIR}/data/ingredients.csv',
+                '/data/ingredients.csv',
                 'r',
                 encoding='utf-8',
         ) as csv_file:
