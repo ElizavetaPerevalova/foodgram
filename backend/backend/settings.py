@@ -121,7 +121,7 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 6,
 }
 
-LANGUAGE_CODE = 'ru'
+LANGUAGE_CODE = "en-us"
 
 TIME_ZONE = 'UTC'
 
