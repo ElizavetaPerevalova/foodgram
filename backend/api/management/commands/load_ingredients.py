@@ -1,6 +1,7 @@
 import csv
 import datetime
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from api.models import Ingredient
 
@@ -16,8 +17,8 @@ class Command(BaseCommand):
         start_time = datetime.datetime.now()
         try:
             with open(
-                "recipes/management/data/ingredients.csv",
-                "r",
+                f'{settings.BASE_DIR}/data/ingredients.csv',
+                'r',
                 encoding="utf-8",
             ) as file:
                 if not file:
