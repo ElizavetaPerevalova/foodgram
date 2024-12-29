@@ -17,8 +17,8 @@ class Command(BaseCommand):
         start_time = datetime.datetime.now()
         try:
             with open(
-                f'{settings.BASE_DIR}/data/ingredients.csv',
-                'r',
+                "recipes/management/data/ingredients.csv",
+                "r",
                 encoding="utf-8",
             ) as file:
                 if not file:
