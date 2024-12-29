@@ -198,6 +198,15 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
         )
 
+    def get_ingredients(self, recipe):
+        """Получает список ингредиентов для рецепта."""
+        return recipe.ingredients.values(
+            'id',
+            'name',
+            'measurement_unit',
+            amount=models.F('recipes__ingredient_list')
+        )
+
     def get_is_favorited(self, obj):
         """Проверка - находится ли рецепт в избранном."""
         request = self.context.get('request')
@@ -256,32 +265,29 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "measurement_unit", "amount")
 
 
-class RecipeReadSerializer(serializers.ModelSerializer):
-    """ Сериализатор для возврата списка рецептов."""
+class RecipeListSerializer(serializers.ModelSerializer):
 
-    tags = TagSerializer(many=True, read_only=True)
     author = UserSerializer(read_only=True)
-    ingredients = IngredientInRecipeSerializer(many=True,
-                                               required=True,
-                                               source='ingredient_list')
-    image = Base64ImageField()
-    is_favorited = fields.SerializerMethodField(read_only=True)
-    is_in_shopping_cart = fields.SerializerMethodField(read_only=True)
+    ingredients = RecipeIngredientSerializer(
+        many=True, source="RecipeIngredient"
+    )
+    tags = TagSerializer(many=True, read_only=True)
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
         fields = (
-            'id', 'tags', 'author', 'ingredients', 'is_favorited',
-            'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
-        )
-
-    def get_ingredients(self, recipe):
-        """Получает список ингредиентов для рецепта."""
-        return recipe.ingredients.values(
-            'id',
-            'name',
-            'measurement_unit',
-            amount=models.F('recipes__ingredient_list')
+            "id",
+            "tags",
+            "author",
+            "ingredients",
+            "is_favorited",
+            "is_in_shopping_cart",
+            "name",
+            "image",
+            "text",
+            "cooking_time",
         )
 
     def get_is_favorited(self, data):
@@ -322,7 +328,7 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
     """Короткий сериализатор рецепта."""
     class Meta:
         model = Recipe
-        fields = ("id", "name", "image", "cooking_time", "ingredients")
+        fields = ("id", "name", "image", "cooking_time")
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
