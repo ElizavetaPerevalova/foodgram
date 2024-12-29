@@ -1,14 +1,18 @@
 import csv
 import datetime
 
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from api.models import Ingredient
 
-csv_file = "ingredients.csv"
-fields = ("name", "measurement_unit")
-
 
 class Command(BaseCommand):
+    PATH_DATA, FILE_NAME = 'data', 'ingredients.csv'
+
+    PATH = settings.BASE_DIR.joinpath(PATH_DATA)
+
+    FIELD_NAMES = ('name', 'measurement_unit')
+
     help = "Load ingredients from csv file"
 
     def handle(self, *args, **options):
@@ -22,7 +26,7 @@ class Command(BaseCommand):
             ) as file:
                 if not file:
                     raise FileNotFoundError
-                reader = csv.DictReader(file, delimiter=",")
+                reader = csv.DictReader(file, fieldnames=self.FIELD_NAMES)
                 for row in reader:
                     print(row)
                     Ingredient.objects.get_or_create(**row)
