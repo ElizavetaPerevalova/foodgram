@@ -1,7 +1,7 @@
 import base64
 
 from django.core.files.base import ContentFile
-from django.db import transaction
+from django.db import models, transaction
 from rest_framework import (exceptions, fields, relations, serializers, status,
                             validators)
 from rest_framework.exceptions import PermissionDenied
@@ -198,11 +198,6 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
         )
 
-    def get_ingredients(self, obj):
-        """Получает список ингредиентов для рецепта."""
-        serializer = IngredientInRecipeSerializer
-        return serializer.data
-
     def get_is_favorited(self, obj):
         """Проверка - находится ли рецепт в избранном."""
         request = self.context.get('request')
@@ -261,29 +256,32 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "measurement_unit", "amount")
 
 
-class RecipeListSerializer(serializers.ModelSerializer):
+class RecipeReadSerializer(serializers.ModelSerializer):
+    """ Сериализатор для возврата списка рецептов."""
 
-    author = UserSerializer(read_only=True)
-    ingredients = RecipeIngredientSerializer(
-        many=True, source="RecipeIngredient"
-    )
     tags = TagSerializer(many=True, read_only=True)
-    is_favorited = serializers.SerializerMethodField()
-    is_in_shopping_cart = serializers.SerializerMethodField()
+    author = UserSerializer(read_only=True)
+    ingredients = IngredientInRecipeSerializer(many=True,
+                                               required=True,
+                                               source='ingredient_list')
+    image = Base64ImageField()
+    is_favorited = fields.SerializerMethodField(read_only=True)
+    is_in_shopping_cart = fields.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Recipe
         fields = (
-            "id",
-            "tags",
-            "author",
-            "ingredients",
-            "is_favorited",
-            "is_in_shopping_cart",
-            "name",
-            "image",
-            "text",
-            "cooking_time",
+            'id', 'tags', 'author', 'ingredients', 'is_favorited',
+            'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
+        )
+
+    def get_ingredients(self, recipe):
+        """Получает список ингредиентов для рецепта."""
+        return recipe.ingredients.values(
+            'id',
+            'name',
+            'measurement_unit',
+            amount=models.F('recipes__ingredient_list')
         )
 
     def get_is_favorited(self, data):
@@ -324,7 +322,7 @@ class ShortRecipeSerializer(serializers.ModelSerializer):
     """Короткий сериализатор рецепта."""
     class Meta:
         model = Recipe
-        fields = ("id", "name", "image", "cooking_time")
+        fields = ("id", "name", "image", "cooking_time", "ingredients")
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
