@@ -1,7 +1,7 @@
 import base64
 
 from django.core.files.base import ContentFile
-from django.db import models, transaction
+from django.db import transaction
 from rest_framework import (exceptions, fields, relations, serializers, status,
                             validators)
 from rest_framework.exceptions import PermissionDenied
@@ -198,26 +198,15 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
         )
 
-    def get_ingredients(self, recipe):
-        """Получает список ингредиентов для рецепта."""
-        return recipe.ingredients.values(
-            'id',
-            'name',
-            'measurement_unit',
-            amount=models.F('recipes__ingredient_list')
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["is_favorited"] = representation.get(
+            "is_favorited", False
         )
-
-    def get_is_favorited(self, obj):
-        """Проверка - находится ли рецепт в избранном."""
-        request = self.context.get('request')
-        return (request and request.user.is_authenticated
-                and request.user.favourites.filter(recipe=obj).exists())
-
-    def get_is_in_shopping_cart(self, obj):
-        """Проверка - находится ли рецепт в списке покупок."""
-        request = self.context.get('request')
-        return (request and request.user.is_authenticated
-                and request.user.shopping_list.filter(recipe=obj).exists())
+        representation["is_in_shopping_cart"] = representation.get(
+            "is_in_shopping_cart", False
+        )
+        return representation
 
 
 class IngredientInRecipeWriteSerializer(serializers.ModelSerializer):
