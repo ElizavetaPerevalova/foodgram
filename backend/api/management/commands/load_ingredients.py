@@ -16,7 +16,7 @@ class Command(BaseCommand):
         start_time = datetime.datetime.now()
         try:
             with open(
-                "data/ingredients.csv",
+                "backend/data/ingredients.csv",
                 "r",
                 encoding="utf-8",
             ) as file:
