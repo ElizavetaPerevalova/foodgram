@@ -198,14 +198,14 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
         )
 
-    def get_ingredients(self, recipe):
-        """Получает список ингредиентов для рецепта."""
-        return recipe.ingredients.values(
-            'id',
-            'name',
-            'measurement_unit',
-            amount=models.F('recipes__ingredient_list')
-        )
+    # def get_ingredients(self, recipe):
+    #     """Получает список ингредиентов для рецепта."""
+    #     return recipe.ingredients.values(
+    #         'id',
+    #         'name',
+    #         'measurement_unit',
+    #         amount=models.F('recipes__ingredient_list')
+    #     )
 
     def get_is_favorited(self, obj):
         """Проверка - находится ли рецепт в избранном."""
