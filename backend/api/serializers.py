@@ -48,21 +48,26 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data: dict) -> User:
         """Создаёт нового пользователя с запрошенными полями.
 
-        Args:
-            validated_data (dict): Полученные проверенные данные.
+    Args:
+        validated_data (dict): Полученные проверенные данные.
 
-        Returns:
-            User: Созданный пользователь.
-        """
-        user = User(
-            email=validated_data["email"],
-            username=validated_data["username"],
-            first_name=validated_data["first_name"],
-            last_name=validated_data["last_name"],
-        )
-        user.set_password(validated_data["password"])
-        user.save()
-        return user
+    Returns:
+        User: Созданный пользователь.
+    """
+        try:
+            user = User(
+                email=validated_data["email"],
+                username=validated_data["username"],
+                first_name=validated_data["first_name"],
+                last_name=validated_data["last_name"],
+            )
+            user.set_password(validated_data["password"])
+            user.save()
+            return user
+        except KeyError as e:
+            raise ValueError(f"Missing required field: {e}")
+        except Exception as e:
+            raise ValueError(f"An error occurred while creating the user: {e}")
 
 
 class FollowSerializer(UserSerializer):
