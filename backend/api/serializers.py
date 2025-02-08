@@ -194,18 +194,27 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = (
-            'id', 'tags', 'author', 'ingredients', 'is_favorited',
-            'is_in_shopping_cart', 'name', 'image', 'text', 'cooking_time',
+            "id",
+            "tags",
+            "author",
+            "ingredients",
+            "name",
+            "image",
+            "text",
+            "cooking_time",
+            "is_favorited",
+            "is_in_shopping_cart",
         )
 
-    def get_ingredients(self, recipe):
-        """Получает список ингредиентов для рецепта."""
-        return recipe.ingredients.values(
-            'id',
-            'name',
-            'measurement_unit',
-            amount=models.F('recipes__ingredient_list')
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["is_favorited"] = representation.get(
+            "is_favorited", False
         )
+        representation["is_in_shopping_cart"] = representation.get(
+            "is_in_shopping_cart", False
+        )
+        return representation
 
     def get_is_favorited(self, obj):
         """Проверка - находится ли рецепт в избранном."""
