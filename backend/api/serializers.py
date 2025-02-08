@@ -1,7 +1,7 @@
 import base64
 
 from django.core.files.base import ContentFile
-from django.db import models, transaction
+from django.db import transaction
 from rest_framework import (exceptions, fields, relations, serializers, status,
                             validators)
 from rest_framework.exceptions import PermissionDenied
