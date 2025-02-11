@@ -3,7 +3,7 @@ from django.db.models import Sum
 from django.http import FileResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
@@ -145,10 +145,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @transaction.atomic
     def perform_destroy(self, instance):
-        instance.ingredient_list.all().delete()
-        instance.in_shopping_list.all().delete()
-        instance.in_favourites.all().delete()
-        instance.delete()
+        try:
+            instance.ingredient_list.all().delete()
+            instance.in_shopping_list.all().delete()
+            instance.in_favourites.all().delete()
+            instance.delete()
+        except IntegrityError as e:
+            raise ValidationError({'error': str(e)})
 
     @action(
         methods=["POST", "DELETE"],
