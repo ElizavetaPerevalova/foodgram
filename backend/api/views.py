@@ -152,6 +152,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             instance.delete()
         except IntegrityError as e:
             raise ValidationError({'error': str(e)})
+        except Exception as e:
+            raise ValidationError({'error': 'An unexpected error occurred: '
+                                   + str(e)})
 
     @action(
         methods=["POST", "DELETE"],
