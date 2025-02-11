@@ -8,7 +8,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.validators import UniqueTogetherValidator
 
 from users.models import Follow, User
-from .models import (Favourites, Ingredient, IngredientInRecipe, Recipe,
+from .models import (Favourites, Ingredient, RecipeIngredient, Recipe,
                      RecipeIngredient, ShoppingCart, Tag)
 from backend.constants import (ALREADY_BUY, COOKING_TIME_MIN_ERROR,
                                DUBLICAT_USER, INGREDIENT_DUBLICATE_ERROR,
@@ -132,7 +132,7 @@ class TagSerializer(serializers.ModelSerializer):
         )
 
 
-class IngredientInRecipeSerializer(serializers.ModelSerializer):
+class RecipeIngredientSerializer(serializers.ModelSerializer):
     """ Сериализатор для вывода количества ингредиентов в рецепте."""
 
     id = serializers.PrimaryKeyRelatedField(
@@ -153,7 +153,7 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = IngredientInRecipe
+        model = RecipeIngredient
         fields = '__all__'
 
 
@@ -189,9 +189,8 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 
     tags = TagSerializer(many=True, read_only=True)
     author = UserSerializer(read_only=True)
-    ingredients = IngredientInRecipeSerializer(many=True,
-                                               required=True,
-                                               source='ingredient_list')
+    ingredients = RecipeIngredientSerializer(many=True, required=True,
+                                             source='ingredient_list')
     image = Base64ImageField()
     is_favorited = fields.SerializerMethodField(read_only=True)
     is_in_shopping_cart = fields.SerializerMethodField(read_only=True)
@@ -234,13 +233,13 @@ class RecipeReadSerializer(serializers.ModelSerializer):
                 and request.user.shopping_list.filter(recipe=obj).exists())
 
 
-class IngredientInRecipeWriteSerializer(serializers.ModelSerializer):
+class RecipeIngredientWriteSerializer(serializers.ModelSerializer):
     """ Сериализатор для ингредиента в рецепте."""
 
     id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
 
     class Meta:
-        model = IngredientInRecipe
+        model = RecipeIngredient
         fields = ('id', 'amount')
 
 
@@ -371,7 +370,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     tags = relations.PrimaryKeyRelatedField(queryset=Tag.objects.all(),
                                             many=True)
     author = UserSerializer(read_only=True)
-    ingredients = IngredientInRecipeWriteSerializer(many=True)
+    ingredients = RecipeIngredientWriteSerializer(many=True)
     image = Base64ImageField(max_length=None, use_url=True)
 
     class Meta:
@@ -383,7 +382,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create_bulk_ingredients(self, ingredients, recipe):
         for ingredient in ingredients:
-            IngredientInRecipe.objects.get_or_create(
+            RecipeIngredient.objects.get_or_create(
                 recipe=recipe,
                 ingredient=ingredient['id'],
                 amount=ingredient['amount']

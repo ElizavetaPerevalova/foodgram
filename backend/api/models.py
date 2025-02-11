@@ -1,10 +1,8 @@
-from django.core import validators
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from users.models import User
-from backend.constants import (INGREDIENT_MIN_AMOUNT,
-                               INGREDIENT_MIN_AMOUNT_ERROR, LEN_RECIPE_NAME,
+from backend.constants import (LEN_RECIPE_NAME,
                                LENG_MAX, MAX_AMOUNT, MAX_COOKING_TIME,
                                MAX_LENG, MAX_NUMBER_OF_CHARACTERS, MIN_AMOUNT,
                                MIN_COOKING_TIME)
@@ -129,54 +127,6 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.name
-
-
-class IngredientInRecipe(models.Model):
-    """Количество ингредиентов в рецепте.
-    Модель связывает Recipe и Ingredient с указанием количества ингредиентов.
-    """
-
-    recipe = models.ForeignKey(
-        Recipe,
-        verbose_name='Рецепт',
-        on_delete=models.CASCADE,
-        related_name='ingredient_list'
-    )
-
-    ingredient = models.ForeignKey(
-        Ingredient,
-        verbose_name='Ингредиент',
-        on_delete=models.CASCADE,
-        related_name='ingredient_list',
-    )
-
-    amount = models.PositiveSmallIntegerField(
-        default=INGREDIENT_MIN_AMOUNT,
-        validators=(
-            validators.MinValueValidator(
-                INGREDIENT_MIN_AMOUNT,
-                message=INGREDIENT_MIN_AMOUNT_ERROR
-            ),
-        ),
-        verbose_name='Количество',
-    )
-
-    class Meta:
-        ordering = ('-id',)
-        verbose_name = 'Количество ингредиента'
-        verbose_name_plural = 'Количество ингредиентов'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['ingredient', 'recipe'],
-                name='unique_ingredient_recipe'
-            )
-        ]
-
-    def __str__(self):
-        return (
-            f'{self.ingredient.name} ({self.ingredient.measurement_unit})'
-            f' - {self.amount}'
-        )
 
 
 class RecipeIngredient(models.Model):
