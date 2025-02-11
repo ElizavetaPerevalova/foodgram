@@ -9,7 +9,7 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from users.models import Follow, User
 from .models import (Favourites, Ingredient, IngredientInRecipe, Recipe,
-                     RecipeIngredient, ShoppingCart, Tag)
+                     ShoppingCart, Tag)
 from backend.constants import (ALREADY_BUY, COOKING_TIME_MIN_ERROR,
                                DUBLICAT_USER, INGREDIENT_DUBLICATE_ERROR,
                                INGREDIENT_MIN_AMOUNT_ERROR, RECIPE_IN_FAVORITE,
@@ -275,7 +275,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = RecipeIngredient
+        model = IngredientInRecipe
         fields = ("id", "name", "measurement_unit", "amount")
 
 
@@ -283,7 +283,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
 
     author = UserSerializer(read_only=True)
     ingredients = RecipeIngredientSerializer(
-        many=True, source="RecipeIngredient"
+        many=True, source="IngredientInRecipe"
     )
     tags = TagSerializer(many=True, read_only=True)
     is_favorited = serializers.SerializerMethodField()
@@ -380,15 +380,6 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                   'name', 'text', 'cooking_time')
         read_only_fields = ('author',)
 
-    @transaction.atomic
-    def create_bulk_ingredients(self, ingredients, recipe):
-        for ingredient in ingredients:
-            IngredientInRecipe.objects.get_or_create(
-                recipe=recipe,
-                ingredient=ingredient['id'],
-                amount=ingredient['amount']
-            )
-
     def validate(self, data):
         ingredients = data.get("ingredients")
         tags = data.get("tags")
@@ -409,9 +400,9 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return data
 
     def add_ingredients(self, ingredients, recipe):
-        RecipeIngredient.objects.bulk_create(
+        IngredientInRecipe.objects.bulk_create(
             [
-                RecipeIngredient(
+                IngredientInRecipe(
                     recipe=recipe,
                     ingredient=ingredient["id"],
                     amount=ingredient["amount"],
@@ -421,39 +412,13 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
-        recipeingredient_set_data = validated_data.pop('recipeingredient_set')
-        tags_data = validated_data.pop('tags')
-        recipe = Recipe.objects.create(**validated_data)
-
-        RecipeIngredient.objects.bulk_create(
-            RecipeIngredient(
-                ingredient=pair['ingredient'],
-                recipe=recipe,
-                amount=pair['amount']
-            )
-            for pair in recipeingredient_set_data
-        )
-
-        recipe.tags.set(tags_data)
-
+        request = self.context.get("request")
+        ingredients = validated_data.pop("ingredients")
+        tags = validated_data.pop("tags")
+        recipe = Recipe.objects.create(author=request.user, **validated_data)
+        recipe.tags.set(tags)
+        self.add_ingredients(ingredients, recipe)
         return recipe
-    # def create(self, validated_data):
-    #     request = self.context.get("request")
-    #     ingredients = validated_data.pop("ingredients")
-    #     tags = validated_data.pop("tags")
-    #     recipe = Recipe.objects.create(author=request.user, **validated_data)
-    #     recipe.tags.set(tags)
-    #     self.add_ingredients(ingredients, recipe)
-    #     RecipeIngredient.objects.bulk_create(
-    #         RecipeIngredient(
-    #             ingredient=pair['ingredient'],
-    #             recipe=recipe,
-    #             amount=pair['amount']
-    #         )
-    #         for pair in recipeingredient_set_data
-    #     )
-
-    #     recipe.tags.set(tags_data)
 
     def update(self, instance, validated_data):
         if instance.author != self.context["request"].user:
