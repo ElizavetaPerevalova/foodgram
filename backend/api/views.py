@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
@@ -16,7 +16,6 @@ from .paginations import CustomPagination
 from .permissions import AuthorOrReadOnly
 from .serializers import (AvatarSerializer, FavoriteSerializer,
                           FollowSerializer, IngredientSerializer,
-                          RecipeDeleteSerializer,
                           RecipeReadSerializer, RecipeWriteSerializer,
                           ShortRecipeSerializer, TagSerializer, UserSerializer)
 from .utils import render_shopping_list
@@ -134,21 +133,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if is_favorited and not user.is_anonymous:
             return queryset
 
-    # def get_serializer_class(self):
-    #     if self.request.method in ('POST', 'PUT', 'PATCH'):
-    #         return RecipeWriteSerializer
-    #     if self.request.method in SAFE_METHODS:
-    #         return RecipeReadSerializer
     def get_serializer_class(self):
         if self.request.method in ('POST', 'PUT', 'PATCH'):
             return RecipeWriteSerializer
-        elif self.request.method == 'DELETE':
-            return RecipeDeleteSerializer
-        return RecipeReadSerializer
-
-    def perform_destroy(self, instance):
-        serializer = self.get_serializer(instance)
-        serializer.delete()
+        if self.request.method in SAFE_METHODS:
+            return RecipeReadSerializer
 
     @action(
         methods=["POST", "DELETE"],
