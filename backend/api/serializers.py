@@ -473,6 +473,26 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return RecipeReadSerializer(instance, context=context).data
 
 
+class RecipeDeleteSerializer(serializers.ModelSerializer):
+    """Сериализатор для удаления рецептов."""
+
+    class Meta:
+        model = Recipe
+        fields = []
+
+    def delete(self):
+        instance = self.instance
+        try:
+            with transaction.atomic():
+                instance.ingredient_list.all().delete()
+                instance.in_shopping_list.all().delete()
+                instance.in_favourites.all().delete()
+                instance.delete()
+        except Exception as e:
+            raise serializers.ValidationError({'error': str(e)})
+        return instance
+
+
 class AddShoppingListRecipeSerializer(AddFavoriteRecipeSerializer):
     """Сериализатор добавления рецептов в список покупок."""
 
