@@ -134,7 +134,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return queryset
 
     def get_serializer_class(self):
-        if self.request.method in ('POST', 'PUT', 'PATCH'):
+        if self.request.method in ('POST', 'PUT', 'PATCH', 'DELETE'):
             return RecipeWriteSerializer
         if self.request.method in SAFE_METHODS:
             return RecipeReadSerializer
