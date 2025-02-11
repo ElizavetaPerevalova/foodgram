@@ -213,7 +213,6 @@ class FavoriteAndShoppingCartModel(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        null=True,
         verbose_name='Пользователь',
     )
 
@@ -232,19 +231,6 @@ class FavoriteAndShoppingCartModel(models.Model):
 
 class Favourites(FavoriteAndShoppingCartModel):
     """Избранное."""
-
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name="favourites",
-        verbose_name="Пользователь",
-    )
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        related_name="in_favourites",
-        verbose_name="Рецепт",
-    )
     pub_date = models.DateTimeField(
         "Дата добавления",
         auto_now_add=True,
@@ -253,3 +239,9 @@ class Favourites(FavoriteAndShoppingCartModel):
     class Meta:
         verbose_name = "Избранное"
         verbose_name_plural = "Избранные"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_favorite_recipe'
+            )
+        ]

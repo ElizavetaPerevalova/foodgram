@@ -1,5 +1,6 @@
 import base64
 
+import logging
 from django.core.files.base import ContentFile
 from django.db import transaction
 from rest_framework import (exceptions, fields, relations, serializers, status,
@@ -474,8 +475,6 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
 
 class RecipeDeleteSerializer(serializers.ModelSerializer):
-    """Сериализатор для удаления рецептов."""
-
     class Meta:
         model = Recipe
         fields = []
@@ -489,6 +488,7 @@ class RecipeDeleteSerializer(serializers.ModelSerializer):
                 instance.in_favourites.all().delete()
                 instance.delete()
         except Exception as e:
+            logging.error(f"А вот и ошибка: {e}")
             raise serializers.ValidationError({'error': str(e)})
         return instance
 
