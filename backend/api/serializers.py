@@ -4,7 +4,7 @@ from django.core.files.base import ContentFile
 from django.db import transaction
 from rest_framework import (exceptions, fields, relations, serializers, status,
                             validators)
-from rest_framework.exceptions import PermissionDenied
+# from rest_framework.exceptions import PermissionDenied
 from rest_framework.validators import UniqueTogetherValidator
 
 from users.models import Follow, User
@@ -211,15 +211,15 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             "is_in_shopping_cart",
         )
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        representation["is_favorited"] = representation.get(
-            "is_favorited", False
-        )
-        representation["is_in_shopping_cart"] = representation.get(
-            "is_in_shopping_cart", False
-        )
-        return representation
+    # def to_representation(self, instance):
+    #     representation = super().to_representation(instance)
+    #     representation["is_favorited"] = representation.get(
+    #         "is_favorited", False
+    #     )
+    #     representation["is_in_shopping_cart"] = representation.get(
+    #         "is_in_shopping_cart", False
+    #     )
+    #     return representation
 
     def get_is_favorited(self, obj):
         """Проверка - находится ли рецепт в избранном."""
@@ -430,25 +430,45 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        if instance.author != self.context["request"].user:
-            raise PermissionDenied(
-                "У вас нет прав на редактирование этого рецепта."
+        recipeingredient_set_data = validated_data.pop('recipeingredient_set')
+        tags_data = validated_data.pop('tags')
+
+        instance.ingredients.clear()
+        instance.tags.clear()
+
+        RecipeIngredient.objects.bulk_create(
+            RecipeIngredient(
+                ingredient=pair['ingredient'],
+                recipe=instance,
+                amount=pair['amount']
             )
-        image = validated_data.get("image")
-        if not image:
-            raise serializers.ValidationError(
-                'Поле "image" не может быть пустым.', code="invalid_image"
-            )
-        tags = validated_data.pop("tags")
-        ingredients = validated_data.pop("ingredients")
-        recipe = super().update(instance, validated_data)
-        if tags:
-            recipe.tags.clear()
-            recipe.tags.set(tags)
-        if ingredients:
-            recipe.ingredients.clear()
-            self.add_ingredients(ingredients, recipe)
-        return recipe
+            for pair in recipeingredient_set_data
+        )
+
+        instance.tags.set(tags_data)
+
+        return super().update(instance, validated_data)
+
+    # def update(self, instance, validated_data):
+    #     if instance.author != self.context["request"].user:
+    #         raise PermissionDenied(
+    #             "У вас нет прав на редактирование этого рецепта."
+    #         )
+    #     image = validated_data.get("image")
+    #     if not image:
+    #         raise serializers.ValidationError(
+    #             'Поле "image" не может быть пустым.', code="invalid_image"
+    #         )
+    #     tags = validated_data.pop("tags")
+    #     ingredients = validated_data.pop("ingredients")
+    #     recipe = super().update(instance, validated_data)
+    #     if tags:
+    #         recipe.tags.clear()
+    #         recipe.tags.set(tags)
+    #     if ingredients:
+    #         recipe.ingredients.clear()
+    #         self.add_ingredients(ingredients, recipe)
+    #     return recipe
 
     def validate_ingredients(self, value):
         """Проверяем ингредиенты в рецепте."""
