@@ -1,10 +1,12 @@
+from django.core import validators
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from users.models import User
-from backend.constants import (LEN_RECIPE_NAME,
-                               LENG_MAX, MAX_AMOUNT, MAX_COOKING_TIME,
-                               MAX_LENG, MAX_NUMBER_OF_CHARACTERS, MIN_AMOUNT,
+from backend.constants import (INGREDIENT_MIN_AMOUNT,
+                               INGREDIENT_MIN_AMOUNT_ERROR, LEN_RECIPE_NAME,
+                               LENG_MAX, MAX_COOKING_TIME,
+                               MAX_LENG, MAX_NUMBER_OF_CHARACTERS,
                                MIN_COOKING_TIME)
 
 
@@ -129,29 +131,52 @@ class Recipe(models.Model):
         return self.name
 
 
-class RecipeIngredient(models.Model):
-    """Ингредиенты рецептов."""
+class IngredientInRecipe(models.Model):
+    """Количество ингредиентов в рецепте.
+    Модель связывает Recipe и Ingredient с указанием количества ингредиентов.
+    """
 
     recipe = models.ForeignKey(
         Recipe,
+        verbose_name='Рецепт',
         on_delete=models.CASCADE,
-        related_name="Recipe_ingredient",
-        verbose_name="Рецепт",
+        related_name='ingredient_list'
     )
+
     ingredient = models.ForeignKey(
         Ingredient,
+        verbose_name='Ингредиент',
         on_delete=models.CASCADE,
-        related_name="Recipe_ingredient",
-        verbose_name="Ингредиент из рецепта",
+        related_name='ingredient_list',
     )
-    amount = models.PositiveIntegerField(
-        "Количество",
-        validators=[
-            MinValueValidator(MIN_AMOUNT),
-            MaxValueValidator(MAX_AMOUNT)
-        ],
-        help_text="Количество ингредиента в рецепте от 1 до 32000.",
+
+    amount = models.PositiveSmallIntegerField(
+        default=INGREDIENT_MIN_AMOUNT,
+        validators=(
+            validators.MinValueValidator(
+                INGREDIENT_MIN_AMOUNT,
+                message=INGREDIENT_MIN_AMOUNT_ERROR
+            ),
+        ),
+        verbose_name='Количество',
     )
+
+    class Meta:
+        ordering = ('-id',)
+        verbose_name = 'Количество ингредиента'
+        verbose_name_plural = 'Количество ингредиентов'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['ingredient', 'recipe'],
+                name='unique_ingredient_recipe'
+            )
+        ]
+
+    def __str__(self):
+        return (
+            f'{self.ingredient.name} ({self.ingredient.measurement_unit})'
+            f' - {self.amount}'
+        )
 
 
 class ShoppingCart(models.Model):

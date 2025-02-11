@@ -8,8 +8,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.validators import UniqueTogetherValidator
 
 from users.models import Follow, User
-from .models import (Favourites, Ingredient, RecipeIngredient, Recipe,
-                     RecipeIngredient, ShoppingCart, Tag)
+from .models import (Favourites, Ingredient, IngredientInRecipe, Recipe,
+                     ShoppingCart, Tag)
 from backend.constants import (ALREADY_BUY, COOKING_TIME_MIN_ERROR,
                                DUBLICAT_USER, INGREDIENT_DUBLICATE_ERROR,
                                INGREDIENT_MIN_AMOUNT_ERROR, RECIPE_IN_FAVORITE,
@@ -153,7 +153,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = RecipeIngredient
+        model = IngredientInRecipe
         fields = '__all__'
 
 
@@ -239,7 +239,7 @@ class RecipeIngredientWriteSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
 
     class Meta:
-        model = RecipeIngredient
+        model = IngredientInRecipe
         fields = ('id', 'amount')
 
 
@@ -274,7 +274,7 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = RecipeIngredient
+        model = IngredientInRecipe
         fields = ("id", "name", "measurement_unit", "amount")
 
 
@@ -282,7 +282,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
 
     author = UserSerializer(read_only=True)
     ingredients = RecipeIngredientSerializer(
-        many=True, source="RecipeIngredient"
+        many=True, source="IngredientInRecipe"
     )
     tags = TagSerializer(many=True, read_only=True)
     is_favorited = serializers.SerializerMethodField()
@@ -382,7 +382,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create_bulk_ingredients(self, ingredients, recipe):
         for ingredient in ingredients:
-            RecipeIngredient.objects.get_or_create(
+            IngredientInRecipe.objects.get_or_create(
                 recipe=recipe,
                 ingredient=ingredient['id'],
                 amount=ingredient['amount']
@@ -408,9 +408,9 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return data
 
     def add_ingredients(self, ingredients, recipe):
-        RecipeIngredient.objects.bulk_create(
+        IngredientInRecipe.objects.bulk_create(
             [
-                RecipeIngredient(
+                IngredientInRecipe(
                     recipe=recipe,
                     ingredient=ingredient["id"],
                     amount=ingredient["amount"],

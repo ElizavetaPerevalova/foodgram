@@ -11,7 +11,7 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from users.models import Follow, User
 from .filters import IngredientFilter, RecipeFilter
-from .models import Ingredient, Recipe, RecipeIngredient, ShoppingCart, Tag
+from .models import Ingredient, Recipe, IngredientInRecipe, ShoppingCart, Tag
 from .paginations import CustomPagination
 from .permissions import AuthorOrReadOnly
 from .serializers import (AvatarSerializer, FavoriteSerializer,
@@ -201,7 +201,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if not shopping_cart.exists():
             raise ValidationError({'status': 'Ваш список покупок пуст'})
 
-        ingredients = RecipeIngredient.objects.filter(
+        ingredients = IngredientInRecipe.objects.filter(
             recipe__in=shopping_cart.values_list('recipe', flat=True)).values(
             'ingredient__name',
             'ingredient__measurement_unit').annotate(total_amount=Sum('amount')

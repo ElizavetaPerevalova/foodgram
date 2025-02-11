@@ -1,12 +1,12 @@
 from django.contrib import admin
 from django.utils.safestring import mark_safe
 
-from .models import (Favourites, Ingredient, Recipe, RecipeIngredient,
+from .models import (Favourites, Ingredient, Recipe, IngredientInRecipe,
                      ShoppingCart, Tag)
 
 
 class RecipeIngredientInline(admin.TabularInline):
-    model = RecipeIngredient
+    model = IngredientInRecipe
     extra = 1
     min_num = 1
 
@@ -39,7 +39,7 @@ class IngredientAdmin(admin.ModelAdmin):
     empty_value_display = "-пусто-"
 
 
-@admin.register(RecipeIngredient)
+@admin.register(IngredientInRecipe)
 class RecipeIngredientAdmin(admin.ModelAdmin):
     list_display = ("recipe", "ingredient", "amount")
 
