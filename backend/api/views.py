@@ -112,10 +112,26 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = (AuthorOrReadOnly,)
     serializer_class = RecipeReadSerializer
     filterset_class = RecipeFilter
-    filterset_fields = (
-        'is_in_shopping_cart', 'is_favorited', 'tags', 'author'
-    )
+    filterset_fields = ('is_in_shopping_cart', 'is_favorited',
+                        'tags', 'author')
     pagination_class = CustomPagination
+
+    def get_serializer_class(self):
+        if self.request.method in ('POST', 'PUT', 'PATCH'):
+            return RecipeWriteSerializer
+        if self.request.method in SAFE_METHODS:
+            return RecipeReadSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance):
+        instance.ingredient_list.all().delete()
+        instance.in_shopping_list.all().delete()
+        instance.in_favourites.all().delete()
+        instance.delete()
 
     def get_queryset(self):
         """
@@ -132,12 +148,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'is_favorited')
         if is_favorited and not user.is_anonymous:
             return queryset
-
-    def get_serializer_class(self):
-        if self.request.method in ('POST', 'PUT', 'PATCH'):
-            return RecipeWriteSerializer
-        if self.request.method in SAFE_METHODS:
-            return RecipeReadSerializer
 
     @action(
         methods=["POST", "DELETE"],
