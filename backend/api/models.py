@@ -5,8 +5,8 @@ from django.db import models
 from users.models import User
 from backend.constants import (INGREDIENT_MIN_AMOUNT,
                                INGREDIENT_MIN_AMOUNT_ERROR, LEN_RECIPE_NAME,
-                               LENG_MAX, MAX_COOKING_TIME,
-                               MAX_LENG, MAX_NUMBER_OF_CHARACTERS,
+                               LENG_MAX, MAX_AMOUNT, MAX_COOKING_TIME,
+                               MAX_LENG, MAX_NUMBER_OF_CHARACTERS, MIN_AMOUNT,
                                MIN_COOKING_TIME)
 
 
@@ -177,6 +177,31 @@ class IngredientInRecipe(models.Model):
             f'{self.ingredient.name} ({self.ingredient.measurement_unit})'
             f' - {self.amount}'
         )
+
+
+class RecipeIngredient(models.Model):
+    """Ингредиенты рецептов."""
+
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name="Recipe_ingredient",
+        verbose_name="Рецепт",
+    )
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE,
+        related_name="Recipe_ingredient",
+        verbose_name="Ингредиент из рецепта",
+    )
+    amount = models.PositiveIntegerField(
+        "Количество",
+        validators=[
+            MinValueValidator(MIN_AMOUNT),
+            MaxValueValidator(MAX_AMOUNT)
+        ],
+        help_text="Количество ингредиента в рецепте от 1 до 32000.",
+    )
 
 
 class ShoppingCart(models.Model):

@@ -9,7 +9,7 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from users.models import Follow, User
 from .models import (Favourites, Ingredient, IngredientInRecipe, Recipe,
-                     ShoppingCart, Tag)
+                     RecipeIngredient, ShoppingCart, Tag)
 from backend.constants import (ALREADY_BUY, COOKING_TIME_MIN_ERROR,
                                DUBLICAT_USER, INGREDIENT_DUBLICATE_ERROR,
                                INGREDIENT_MIN_AMOUNT_ERROR, RECIPE_IN_FAVORITE,
@@ -266,7 +266,7 @@ class AddFavoriteRecipeSerializer(serializers.ModelSerializer):
         ).data
 
 
-class IngredientInRecipeSerializer(serializers.ModelSerializer):
+class RecipeIngredientSerializer(serializers.ModelSerializer):
 
     id = serializers.ReadOnlyField(source="ingredient.id")
     name = serializers.ReadOnlyField(source="ingredient.name")
@@ -275,15 +275,15 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = IngredientInRecipe
+        model = RecipeIngredient
         fields = ("id", "name", "measurement_unit", "amount")
 
 
 class RecipeListSerializer(serializers.ModelSerializer):
 
     author = UserSerializer(read_only=True)
-    ingredients = IngredientInRecipe(
-        many=True, source="IngredientInRecipe"
+    ingredients = RecipeIngredientSerializer(
+        many=True, source="RecipeIngredient"
     )
     tags = TagSerializer(many=True, read_only=True)
     is_favorited = serializers.SerializerMethodField()
@@ -409,9 +409,9 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return data
 
     def add_ingredients(self, ingredients, recipe):
-        IngredientInRecipe.objects.bulk_create(
+        RecipeIngredient.objects.bulk_create(
             [
-                IngredientInRecipe(
+                RecipeIngredient(
                     recipe=recipe,
                     ingredient=ingredient["id"],
                     amount=ingredient["amount"],
