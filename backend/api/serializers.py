@@ -10,10 +10,9 @@ from rest_framework.validators import UniqueTogetherValidator
 from users.models import Follow, User
 from .models import (Favourites, Ingredient, IngredientInRecipe, Recipe,
                      ShoppingCart, Tag)
-from backend.constants import (ALREADY_BUY, COOKING_TIME_MIN_ERROR,
-                               DUBLICAT_USER, INGREDIENT_DUBLICATE_ERROR,
-                               INGREDIENT_MIN_AMOUNT_ERROR, RECIPE_IN_FAVORITE,
-                               SELF_FOLLOW, TAG_ERROR, TAG_UNIQUE_ERROR)
+from backend.constants import (ALREADY_BUY,
+                               DUBLICAT_USER, RECIPE_IN_FAVORITE,
+                               SELF_FOLLOW,)
 
 
 class Base64ImageField(serializers.ImageField):
@@ -432,41 +431,41 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             self.add_ingredients(ingredients, recipe)
         return recipe
 
-    def validate_ingredients(self, value):
-        """Проверяем ингредиенты в рецепте."""
-        ingredients = self.initial_data.get('ingredients')
-        if len(ingredients) <= 0:
-            raise exceptions.ValidationError(
-                {'ingredients': INGREDIENT_MIN_AMOUNT_ERROR})
-        ingredients_list = []
-        for item in ingredients:
-            if item['id'] in ingredients_list:
-                raise exceptions.ValidationError(
-                    {'ingredients': INGREDIENT_DUBLICATE_ERROR})
-            ingredients_list.append(item['id'])
-            if int(item['amount']) <= 0:
-                raise exceptions.ValidationError(
-                    {'amount': INGREDIENT_MIN_AMOUNT_ERROR})
-        return value
+    # def validate_ingredients(self, value):
+    #     """Проверяем ингредиенты в рецепте."""
+    #     ingredients = self.initial_data.get('ingredients')
+    #     if len(ingredients) <= 0:
+    #         raise exceptions.ValidationError(
+    #             {'ingredients': INGREDIENT_MIN_AMOUNT_ERROR})
+    #     ingredients_list = []
+    #     for item in ingredients:
+    #         if item['id'] in ingredients_list:
+    #             raise exceptions.ValidationError(
+    #                 {'ingredients': INGREDIENT_DUBLICATE_ERROR})
+    #         ingredients_list.append(item['id'])
+    #         if int(item['amount']) <= 0:
+    #             raise exceptions.ValidationError(
+    #                 {'amount': INGREDIENT_MIN_AMOUNT_ERROR})
+    #     return value
 
-    def validate_cooking_time(self, data):
-        """Проверяем время приготовления рецепта."""
-        cooking_time = self.initial_data.get('cooking_time')
-        if int(cooking_time) <= 0:
-            raise serializers.ValidationError(COOKING_TIME_MIN_ERROR)
-        return data
+    # def validate_cooking_time(self, data):
+    #     """Проверяем время приготовления рецепта."""
+    #     cooking_time = self.initial_data.get('cooking_time')
+    #     if int(cooking_time) <= 0:
+    #         raise serializers.ValidationError(COOKING_TIME_MIN_ERROR)
+    #     return data
 
-    def validate_tags(self, value):
-        """Проверяем на наличие уникального тега."""
-        tags = value
-        if not tags:
-            raise exceptions.ValidationError({'tags': TAG_ERROR})
-        tags_list = []
-        for tag in tags:
-            if tag in tags_list:
-                raise exceptions.ValidationError({'tags': TAG_UNIQUE_ERROR})
-            tags_list.append(tag)
-        return value
+    # def validate_tags(self, value):
+    #     """Проверяем на наличие уникального тега."""
+    #     tags = value
+    #     if not tags:
+    #         raise exceptions.ValidationError({'tags': TAG_ERROR})
+    #     tags_list = []
+    #     for tag in tags:
+    #         if tag in tags_list:
+    #             raise exceptions.ValidationError({'tags': TAG_UNIQUE_ERROR})
+    #         tags_list.append(tag)
+    #     return value
 
     def to_representation(self, instance):
         request = self.context.get('request')
