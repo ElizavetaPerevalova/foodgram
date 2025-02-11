@@ -282,7 +282,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
 
     author = UserSerializer(read_only=True)
     ingredients = RecipeIngredientSerializer(
-        many=True, source="IngredientInRecipe"
+        many=True, source="ingredient_list"
     )
     tags = TagSerializer(many=True, read_only=True)
     is_favorited = serializers.SerializerMethodField()
@@ -303,13 +303,13 @@ class RecipeListSerializer(serializers.ModelSerializer):
             "cooking_time",
         )
 
-    def get_is_favorited(self, data):
+    def get_is_favorited(self, obj):
         request = self.context.get('request')
         if request is None or request.user.is_anonymous:
             return False
         return Favourites.objects.filter(
             user=request.user,
-            recipe_id=data.id
+            recipe_id=obj.id
         ).exists()
 
     def get_is_in_shopping_cart(self, obj):
