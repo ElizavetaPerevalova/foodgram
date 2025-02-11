@@ -1,6 +1,7 @@
 import base64
 
 from django.core.files.base import ContentFile
+from django.db import transaction
 from rest_framework import (exceptions, fields, relations, serializers, status,
                             validators)
 from rest_framework.exceptions import PermissionDenied
@@ -265,7 +266,7 @@ class AddFavoriteRecipeSerializer(serializers.ModelSerializer):
         ).data
 
 
-class RecipeIngredientSerializer(serializers.ModelSerializer):
+class IngredientInRecipeSerializer(serializers.ModelSerializer):
 
     id = serializers.ReadOnlyField(source="ingredient.id")
     name = serializers.ReadOnlyField(source="ingredient.name")
@@ -281,8 +282,8 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
 class RecipeListSerializer(serializers.ModelSerializer):
 
     author = UserSerializer(read_only=True)
-    ingredients = RecipeIngredientSerializer(
-        many=True, source="ingredient_list"
+    ingredients = IngredientInRecipe(
+        many=True, source="IngredientInRecipe"
     )
     tags = TagSerializer(many=True, read_only=True)
     is_favorited = serializers.SerializerMethodField()
@@ -303,13 +304,13 @@ class RecipeListSerializer(serializers.ModelSerializer):
             "cooking_time",
         )
 
-    def get_is_favorited(self, obj):
+    def get_is_favorited(self, data):
         request = self.context.get('request')
         if request is None or request.user.is_anonymous:
             return False
         return Favourites.objects.filter(
             user=request.user,
-            recipe_id=obj.id
+            recipe_id=data.id
         ).exists()
 
     def get_is_in_shopping_cart(self, obj):
@@ -378,6 +379,15 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         fields = ('id', 'image', 'tags', 'author', 'ingredients',
                   'name', 'text', 'cooking_time')
         read_only_fields = ('author',)
+
+    @transaction.atomic
+    def create_bulk_ingredients(self, ingredients, recipe):
+        for ingredient in ingredients:
+            IngredientInRecipe.objects.get_or_create(
+                recipe=recipe,
+                ingredient=ingredient['id'],
+                amount=ingredient['amount']
+            )
 
     def validate(self, data):
         ingredients = data.get("ingredients")
