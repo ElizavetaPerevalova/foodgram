@@ -3,6 +3,7 @@ from django.db.models import Sum
 from django.http import FileResponse, JsonResponse
 from django.shortcuts import get_object_or_404
 from djoser.views import UserViewSet
+from django.db import transaction
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
@@ -112,26 +113,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = (AuthorOrReadOnly,)
     serializer_class = RecipeReadSerializer
     filterset_class = RecipeFilter
-    filterset_fields = ('is_in_shopping_cart', 'is_favorited',
-                        'tags', 'author')
+    filterset_fields = ('is_in_shopping_cart',
+                        'is_favorited', 'tags', 'author')
     pagination_class = CustomPagination
-
-    def get_serializer_class(self):
-        if self.request.method in ('POST', 'PUT', 'PATCH'):
-            return RecipeWriteSerializer
-        if self.request.method in SAFE_METHODS:
-            return RecipeReadSerializer
-
-    def destroy(self, request, *args, **kwargs):
-        instance = self.get_object()
-        self.perform_destroy(instance)
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
-    def perform_destroy(self, instance):
-        instance.ingredient_list.all().delete()
-        instance.in_shopping_list.all().delete()
-        instance.in_favourites.all().delete()
-        instance.delete()
 
     def get_queryset(self):
         """
@@ -144,10 +128,27 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'is_in_shopping_cart')
         if is_in_shopping_cart and user.is_authenticated:
             return queryset
-        is_favorited = self.request.query_params.get(
-            'is_favorited')
+        is_favorited = self.request.query_params.get('is_favorited')
         if is_favorited and not user.is_anonymous:
             return queryset
+
+    def get_serializer_class(self):
+        if self.request.method in ('POST', 'PUT', 'PATCH'):
+            return RecipeWriteSerializer
+        if self.request.method in SAFE_METHODS:
+            return RecipeReadSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @transaction.atomic
+    def perform_destroy(self, instance):
+        instance.ingredient_list.all().delete()
+        instance.in_shopping_list.all().delete()
+        instance.in_favourites.all().delete()
+        instance.delete()
 
     @action(
         methods=["POST", "DELETE"],
