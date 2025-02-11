@@ -211,15 +211,15 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             "is_in_shopping_cart",
         )
 
-    # def to_representation(self, instance):
-    #     representation = super().to_representation(instance)
-    #     representation["is_favorited"] = representation.get(
-    #         "is_favorited", False
-    #     )
-    #     representation["is_in_shopping_cart"] = representation.get(
-    #         "is_in_shopping_cart", False
-    #     )
-    #     return representation
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["is_favorited"] = representation.get(
+            "is_favorited", False
+        )
+        representation["is_in_shopping_cart"] = representation.get(
+            "is_in_shopping_cart", False
+        )
+        return representation
 
     def get_is_favorited(self, obj):
         """Проверка - находится ли рецепт в избранном."""
@@ -430,24 +430,22 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        recipeingredient_set_data = validated_data.pop('recipeingredient_set')
-        tags_data = validated_data.pop('tags')
+        ingredients = validated_data.pop("ingredients")
+        tags = validated_data.pop("tags")
+
+        instance.name = validated_data.get("name", instance.name)
+        instance.text = validated_data.get("text", instance.text)
+        instance.cooking_time = validated_data.get("cooking_time",
+                                                   instance.cooking_time)
+        instance.image = validated_data.get("image", instance.image)
+        instance.save()
 
         instance.ingredients.clear()
-        instance.tags.clear()
+        self.add_ingredients(ingredients, instance)
 
-        RecipeIngredient.objects.bulk_create(
-            RecipeIngredient(
-                ingredient=pair['ingredient'],
-                recipe=instance,
-                amount=pair['amount']
-            )
-            for pair in recipeingredient_set_data
-        )
+        instance.tags.set(tags)
 
-        instance.tags.set(tags_data)
-
-        return super().update(instance, validated_data)
+        return instance
 
     # def update(self, instance, validated_data):
     #     if instance.author != self.context["request"].user:
