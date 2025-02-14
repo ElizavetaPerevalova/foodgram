@@ -223,10 +223,6 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             {"id": ingredient.ingredient.id, "amount": ingredient.amount}
             for ingredient in instance.ingredient_list.all()
         ]
-        del representation["author"]
-        del representation["is_favorited"]
-        del representation["is_in_shopping_cart"]
-        del representation["id"]
         return representation
 
     def get_is_favorited(self, obj):
