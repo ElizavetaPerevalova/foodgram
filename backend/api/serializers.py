@@ -185,12 +185,12 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class RecipeReadSerializer(serializers.ModelSerializer):
-    """ Сериализатор для возврата списка рецептов."""
+    """Сериализатор для возврата списка рецептов."""
 
     tags = TagSerializer(many=True, read_only=True)
     author = UserSerializer(read_only=True)
     ingredients = RecipeIngredientSerializer(many=True, required=True,
-                                             source='ingredient_list')
+                                             source='ingredients')
     image = Base64ImageField()
     is_favorited = fields.SerializerMethodField(read_only=True)
     is_in_shopping_cart = fields.SerializerMethodField(read_only=True)
