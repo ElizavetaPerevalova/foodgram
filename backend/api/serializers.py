@@ -223,6 +223,10 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             {"id": ingredient.ingredient.id, "amount": ingredient.amount}
             for ingredient in instance.ingredient_list.all()
         ]
+        del representation["author"]
+        del representation["is_favorited"]
+        del representation["is_in_shopping_cart"]
+        del representation["id"]
         return representation
 
     def get_is_favorited(self, obj):
@@ -234,53 +238,6 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         return (request and request.user.is_authenticated
                 and request.user.shopping_list.filter(recipe=obj).exists())
-# class RecipeReadSerializer(serializers.ModelSerializer):
-#     """ Сериализатор для возврата списка рецептов."""
-
-#     tags = TagSerializer(many=True, read_only=True)
-#     author = UserSerializer(read_only=True)
-#     ingredients = RecipeIngredientSerializer(many=True, required=True,
-#                                              source='ingredient_list')
-#     image = Base64ImageField()
-#     is_favorited = fields.SerializerMethodField(read_only=True)
-#     is_in_shopping_cart = fields.SerializerMethodField(read_only=True)
-
-#     class Meta:
-#         model = Recipe
-#         fields = (
-#             "id",
-#             "tags",
-#             "author",
-#             "ingredients",
-#             "name",
-#             "image",
-#             "text",
-#             "cooking_time",
-#             "is_favorited",
-#             "is_in_shopping_cart",
-#         )
-
-#     def to_representation(self, instance):
-#         representation = super().to_representation(instance)
-#         representation["is_favorited"] = representation.get(
-#             "is_favorited", False
-#         )
-#         representation["is_in_shopping_cart"] = representation.get(
-#             "is_in_shopping_cart", False
-#         )
-#         return representation
-
-#     def get_is_favorited(self, obj):
-#         """Проверка - находится ли рецепт в избранном."""
-#         request = self.context.get('request')
-#         return (request and request.user.is_authenticated
-#                 and request.user.favourites.filter(recipe=obj).exists())
-
-#     def get_is_in_shopping_cart(self, obj):
-#         """Проверка - находится ли рецепт в списке покупок."""
-#         request = self.context.get('request')
-#         return (request and request.user.is_authenticated
-#                 and request.user.shopping_list.filter(recipe=obj).exists())
 
 
 class RecipeIngredientWriteSerializer(serializers.ModelSerializer):
