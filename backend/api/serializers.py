@@ -133,35 +133,28 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
-    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
-    amount = serializers.IntegerField()
+    """ Сериализатор для вывода количества ингредиентов в рецепте."""
+
+    id = serializers.PrimaryKeyRelatedField(
+        read_only=True,
+        source='ingredient'
+    )
+
+    name = serializers.SlugRelatedField(
+        source='ingredient',
+        read_only=True,
+        slug_field='name'
+    )
+
+    measurement_unit = serializers.SlugRelatedField(
+        source='ingredient',
+        read_only=True,
+        slug_field='measurement_unit'
+    )
 
     class Meta:
         model = IngredientInRecipe
-        fields = ('id', 'amount')
-# class RecipeIngredientSerializer(serializers.ModelSerializer):
-#     """ Сериализатор для вывода количества ингредиентов в рецепте."""
-
-#     id = serializers.PrimaryKeyRelatedField(
-#         read_only=True,
-#         source='ingredient'
-#     )
-
-#     name = serializers.SlugRelatedField(
-#         source='ingredient',
-#         read_only=True,
-#         slug_field='name'
-#     )
-
-#     measurement_unit = serializers.SlugRelatedField(
-#         source='ingredient',
-#         read_only=True,
-#         slug_field='measurement_unit'
-#     )
-
-#     class Meta:
-#         model = IngredientInRecipe
-#         fields = '__all__'
+        fields = '__all__'
 
 
 class UserListSerializer(
@@ -192,8 +185,9 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class RecipeReadSerializer(serializers.ModelSerializer):
-    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(),
-                                              many=True)
+    """ Сериализатор для возврата списка рецептов."""
+
+    tags = TagSerializer(many=True, read_only=True)
     author = UserSerializer(read_only=True)
     ingredients = RecipeIngredientSerializer(many=True, required=True,
                                              source='ingredient_list')
@@ -218,19 +212,22 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation["tags"] = [tag.id for tag in instance.tags.all()]
-        representation["ingredients"] = [
-            {"id": ingredient.ingredient.id, "amount": ingredient.amount}
-            for ingredient in instance.ingredient_list.all()
-        ]
+        representation["is_favorited"] = representation.get(
+            "is_favorited", False
+        )
+        representation["is_in_shopping_cart"] = representation.get(
+            "is_in_shopping_cart", False
+        )
         return representation
 
     def get_is_favorited(self, obj):
+        """Проверка - находится ли рецепт в избранном."""
         request = self.context.get('request')
         return (request and request.user.is_authenticated
                 and request.user.favourites.filter(recipe=obj).exists())
 
     def get_is_in_shopping_cart(self, obj):
+        """Проверка - находится ли рецепт в списке покупок."""
         request = self.context.get('request')
         return (request and request.user.is_authenticated
                 and request.user.shopping_list.filter(recipe=obj).exists())
