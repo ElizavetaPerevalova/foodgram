@@ -9,7 +9,7 @@ from backend.constants import (INGREDIENT_MIN_AMOUNT,
                                MAX_LENG, MAX_NUMBER_OF_CHARACTERS,
                                MIN_COOKING_TIME)
 
-#please work
+
 class IngredientTagRecipe(models.Model):
     """Абстрактная модель. Добавляет название."""
 
