@@ -398,11 +398,6 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             raise PermissionDenied(
                 "У вас нет прав на редактирование этого рецепта."
             )
-        image = validated_data.get("image")
-        if not image:
-            raise serializers.ValidationError(
-                'Поле "image" не может быть пустым.', code="invalid_image"
-            )
         tags = validated_data.pop("tags")
         ingredients = validated_data.pop("ingredients")
         recipe = super().update(instance, validated_data)
