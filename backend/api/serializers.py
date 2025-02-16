@@ -142,29 +142,6 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = IngredientInRecipe
         fields = ("id", "name", "measurement_unit", "amount")
-# class RecipeIngredientSerializer(serializers.ModelSerializer):
-#     """ Сериализатор для вывода количества ингредиентов в рецепте."""
-
-#     id = serializers.PrimaryKeyRelatedField(
-#         read_only=True,
-#         source='ingredient'
-#     )
-
-#     name = serializers.SlugRelatedField(
-#         source='ingredient',
-#         read_only=True,
-#         slug_field='name'
-#     )
-
-#     measurement_unit = serializers.SlugRelatedField(
-#         source='ingredient',
-#         read_only=True,
-#         slug_field='measurement_unit'
-#     )
-
-#     class Meta:
-#         model = IngredientInRecipe
-#         fields = '__all__'
 
 
 class UserListSerializer(
@@ -375,15 +352,6 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
         fields = ('id', 'image', 'tags', 'author', 'ingredients',
                   'name', 'text', 'cooking_time')
         read_only_fields = ('author',)
-
-    # @transaction.atomic
-    # def create_bulk_ingredients(self, ingredients, recipe):
-    #     for ingredient in ingredients:
-    #         IngredientInRecipe.objects.get_or_create(
-    #             recipe=recipe,
-    #             ingredient=ingredient['id'],
-    #             amount=ingredient['amount']
-    #         )
 
     def validate(self, data):
         ingredients = data.get("ingredients")
