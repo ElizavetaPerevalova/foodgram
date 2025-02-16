@@ -1,7 +1,6 @@
 import base64
 
 from django.core.files.base import ContentFile
-from django.db import transaction
 from rest_framework import (exceptions, fields, relations, serializers, status,
                             validators)
 from rest_framework.exceptions import PermissionDenied
@@ -133,28 +132,39 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
-    """ Сериализатор для вывода количества ингредиентов в рецепте."""
 
-    id = serializers.PrimaryKeyRelatedField(
-        read_only=True,
-        source='ingredient'
-    )
-
-    name = serializers.SlugRelatedField(
-        source='ingredient',
-        read_only=True,
-        slug_field='name'
-    )
-
-    measurement_unit = serializers.SlugRelatedField(
-        source='ingredient',
-        read_only=True,
-        slug_field='measurement_unit'
+    id = serializers.ReadOnlyField(source="ingredient.id")
+    name = serializers.ReadOnlyField(source="ingredient.name")
+    measurement_unit = serializers.ReadOnlyField(
+        source="ingredient.measurement_unit"
     )
 
     class Meta:
         model = IngredientInRecipe
-        fields = '__all__'
+        fields = ("id", "name", "measurement_unit", "amount")
+# class RecipeIngredientSerializer(serializers.ModelSerializer):
+#     """ Сериализатор для вывода количества ингредиентов в рецепте."""
+
+#     id = serializers.PrimaryKeyRelatedField(
+#         read_only=True,
+#         source='ingredient'
+#     )
+
+#     name = serializers.SlugRelatedField(
+#         source='ingredient',
+#         read_only=True,
+#         slug_field='name'
+#     )
+
+#     measurement_unit = serializers.SlugRelatedField(
+#         source='ingredient',
+#         read_only=True,
+#         slug_field='measurement_unit'
+#     )
+
+#     class Meta:
+#         model = IngredientInRecipe
+#         fields = '__all__'
 
 
 class UserListSerializer(
@@ -265,19 +275,6 @@ class AddFavoriteRecipeSerializer(serializers.ModelSerializer):
         ).data
 
 
-class RecipeIngredientSerializer(serializers.ModelSerializer):
-
-    id = serializers.ReadOnlyField(source="ingredient.id")
-    name = serializers.ReadOnlyField(source="ingredient.name")
-    measurement_unit = serializers.ReadOnlyField(
-        source="ingredient.measurement_unit"
-    )
-
-    class Meta:
-        model = IngredientInRecipe
-        fields = ("id", "name", "measurement_unit", "amount")
-
-
 class RecipeListSerializer(serializers.ModelSerializer):
 
     author = UserSerializer(read_only=True)
@@ -379,14 +376,14 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
                   'name', 'text', 'cooking_time')
         read_only_fields = ('author',)
 
-    @transaction.atomic
-    def create_bulk_ingredients(self, ingredients, recipe):
-        for ingredient in ingredients:
-            IngredientInRecipe.objects.get_or_create(
-                recipe=recipe,
-                ingredient=ingredient['id'],
-                amount=ingredient['amount']
-            )
+    # @transaction.atomic
+    # def create_bulk_ingredients(self, ingredients, recipe):
+    #     for ingredient in ingredients:
+    #         IngredientInRecipe.objects.get_or_create(
+    #             recipe=recipe,
+    #             ingredient=ingredient['id'],
+    #             amount=ingredient['amount']
+    #         )
 
     def validate(self, data):
         ingredients = data.get("ingredients")
